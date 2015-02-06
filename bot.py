@@ -1,41 +1,9 @@
 import socket
 import urllib
-from bs4 import BeautifulSoup
-from random import randint
-from time import sleep
-from time import clock
+import markovTree
+import random
 
-class MarkovTree:
-    def __init__(self):
-        self.stopword = '\x03'
-        self.chain_length = 2
-        self.tree = {}
-
-    def addMessage(self, msg):
-        words = msg.split()
-        
-        if len(words) > self.chain_length:
-            words.append(self.stopword)
-            
-            for i in range(len(words) - self.chain_length):
-                self.addToTree(words[i:i + self.chain_length + 1])
-    
-    #this needs to have list be a list of chain_length + 1
-    def addToTree(self, list):
-        key = tuple(list[:self.chain_length])
-        value = list[-1]
-        
-        if key in self.tree:
-            if value not in self.tree[key]:
-                self.tree[key].append(value)
-        else:
-            self.tree[key] = [value]
-    
-    def printTree(self):
-        return str(self.tree)
-
-
-nick = 'Markovbot'
+nick = 'markovbot'
 network = 'chat.freenode.net'
 port = 8000
 #chan = '#r/kansascity'
@@ -50,7 +18,7 @@ irc.send('NICK ' + nick + '\r\n')
 irc.send('USER ' + nick + ' 8 * :' + nick + '\r\n')
 irc.send('JOIN ' + chan + '\r\n')
 
-mTree = MarkovTree()
+mTree = markovTree.MarkovTree()
 
 while True:
     data = irc.recv (4096)
@@ -65,11 +33,19 @@ while True:
         
     if data.find('PRIVMSG ' + nick + ' :mbprinttree') != -1:
         print mTree.printTree()
-    
-    if data.find('PRIVMSG ' + chan) > 0:
-        print 'Adding message to MarkovTree ' + " ".join(data.split()[3:])[1:]
-        mTree.addMessage(" ".join(data.split()[3:])[1:])
-    
+
+    if data.lower().find('privmsg ' + chan + ' :'+ nick) != -1:
+        print 'Trying to print a message'
+        
+        #again this assumes chain of 2
+        if len(data.split()) > 5:
+            print (data.split()[4],data.split()[5])
+            print mTree.createMessage((data.split()[4].lower(),data.split()[5].lower()))
+        
+    if data.find('PRIVMSG ' + chan) > 0 and data.lower().find('privmsg ' + chan + ' :'+ nick) == -1:
+        print 'Adding message to MarkovTree "' + " ".join(data.split()[3:])[1:]+ '"'
+        mTree.addMessage(" ".join(data.split()[3:])[1:].lower())
+
     if len(data) == 0:
         break;
     
