@@ -2,12 +2,14 @@ import socket
 import urllib
 import markovTree
 import random
+import re
 
 nick = 'markovbot'
 network = 'chat.freenode.net'
 port = 8000
-#chan = '#r/kansascity'
-chan = '#bottesting'
+chan = '#r/kansascity'
+#chan = '#bottesting'
+treexml = 'rkc.xml'
 
 irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -20,6 +22,12 @@ irc.send('JOIN ' + chan + '\r\n')
 
 mTree = markovTree.MarkovTree()
 
+try:
+    mTree.importTreeFromXML(treexml)
+except IOError:
+    print 'Error loading tree from XML. Continuing with empty tree.'
+    
+    
 while True:
     data = irc.recv (4096)
     print data
@@ -44,8 +52,11 @@ while True:
         
     if data.find('PRIVMSG ' + chan) > 0 and data.lower().find('privmsg ' + chan + ' :'+ nick) == -1:
         print 'Adding message to MarkovTree "' + " ".join(data.split()[3:])[1:]+ '"'
-        mTree.addMessage(" ".join(data.split()[3:])[1:].lower())
+        addMsg = " ".join(data.split()[3:])[1:].lower()
+        
+        mTree.addMessage(re.sub(r'[^a-zA-Z0-9= ]','',addMsg))
 
     if len(data) == 0:
         break;
     
+mTree.writeTreeToXML(treexml)

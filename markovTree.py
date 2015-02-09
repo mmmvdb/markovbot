@@ -3,11 +3,12 @@ import xml.etree.cElementTree as xml
 
 class MarkovTree:
     def __init__(self):
-        self.stopword = '<<<EndOfTree>>>'
+        self.stopword = '|||EndOfTree|||'
         self.chain_length = 2
         self.tree = {}
         self.maxwords = 50
 
+    #right now this can only be alphanum.  Otherwise I am getting errors from cElementTree on saves
     def addMessage(self, msg):
         words = msg.split()
         
