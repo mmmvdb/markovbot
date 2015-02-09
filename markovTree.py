@@ -1,8 +1,9 @@
 import random
+import xml.etree.cElementTree as xml
 
 class MarkovTree:
     def __init__(self):
-        self.stopword = '\x03'
+        self.stopword = '<<<EndOfTree>>>'
         self.chain_length = 2
         self.tree = {}
         self.maxwords = 50
@@ -56,3 +57,39 @@ class MarkovTree:
                 appendWord = self.stopword
                 
         return ' '.join(gen_words)
+    
+    #TODO this seems like it will do some weird stuff if there is a > or < in the text... great
+    def writeTreeToXML(self, filename):
+        xmlRoot = xml.Element("markovtree")
+        
+        for key in self.tree:
+            xmlNode = xml.SubElement(xmlRoot, "node")
+            
+            xmlKey = xml.SubElement(xmlNode, "key")
+            for i in key:
+                xml.SubElement(xmlKey,"keyvalue").text = i
+                
+            xmlValue = xml.SubElement(xmlNode, "valueList")
+            for value in self.tree[key]:
+                xml.SubElement(xmlValue, "value").text = value
+        
+        xmltree = xml.ElementTree(xmlRoot)
+        xmltree.write(filename)
+        
+    #TODO this seems like it will do some weird stuff if there is a > or < in the text... great
+    def importTreeFromXML(self, filename):
+        xmlDoc = xml.ElementTree(file=filename)
+        
+        xmlRoot = xmlDoc.getroot()
+        
+        for node in xmlRoot:
+            keyList = []
+            valueList = []            
+            
+            for keyvalue in node[0]:
+                keyList.append(keyvalue.text)
+            
+            for value in node[1]:
+                valueList.append(value.text)
+                
+            self.tree[tuple(keyList)] = valueList
