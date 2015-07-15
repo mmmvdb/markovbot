@@ -1,7 +1,6 @@
 import socket
 import urllib
 import markovTree
-import random
 import re
 
 nick = 'markovbot'
@@ -27,13 +26,20 @@ try:
 except IOError:
     print 'Error loading tree from XML. Continuing with empty tree.'
     
+pingCount = 0
     
 while True:
     data = irc.recv (4096)
     print data
     if data.find('PING') != -1:
+        pingCount += 1
+        
         print 'PONG ' + data.split()[1]
         irc.send('PONG ' + data.split()[1] + '\r\n')
+        
+        if pingCount%10 == 0:
+            print "PONG count message"
+            irc.send('PRIVMSG ' + chan + " :" + mTree.randomMessage() + '\r\n')
     
     if data.find('PRIVMSG ' + nick + ' :mbquit') != -1:
         print 'Quit due to PM command from' + nick
@@ -58,5 +64,6 @@ while True:
 
     if len(data) == 0:
         break;
-    
+
+print "Saving tree to xml"
 mTree.writeTreeToXML(treexml)

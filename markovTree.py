@@ -94,3 +94,9 @@ class MarkovTree:
                 valueList.append(value.text)
                 
             self.tree[tuple(keyList)] = valueList
+    
+    def randomMessage(self):
+        seed = random.choice(self.tree.keys())
+        
+        return self.createMessage(seed)
+        
